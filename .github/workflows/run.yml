@@ -26,7 +26,7 @@ jobs:
         git config --local user.email "ddobokki@naver.com"
         git config --local user.name "ddobokki"
         git add .
-        git commit -m "Auto - Update data with Scraping"
+        git commit -m "Auto - daliy report summary"
         git push origin main
     - name: Push
       uses: ad-m/github-push-action@master
