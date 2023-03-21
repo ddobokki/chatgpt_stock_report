@@ -19,13 +19,8 @@ def make_requests(engine, prompts,api_key=None, organization=None):
             )
             break
         except openai.error.OpenAIError as e:
-            print(f"OpenAIError: {e}.")
-            if "Please reduce your prompt" in str(e):
-                target_length = int(target_length * 0.8)
-                print(f"Reducing target length to {target_length}, Retrying...")
-            else:
-                print(f"Retrying in {backoff_time} seconds...")
-                time.sleep(backoff_time)
-                backoff_time *= 1.5
+            print(f"Retrying in {backoff_time} seconds...")
+            time.sleep(backoff_time)
+            backoff_time *= 1.5
             retry_cnt += 1
     return response
