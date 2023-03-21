@@ -2,7 +2,7 @@ name: Scraper & Summary
 
 on:
   schedule:
-    - cron: "50 03 * * *"
+    - cron: "00 2,8 * * *"
 jobs:
   build:
 
@@ -20,7 +20,7 @@ jobs:
         python -m pip install -r requirements.txt
     - name: Run Scripts
       run: |
-        python scrap_and_sammary.py --api_key ${{secrets.OPEN_API_KEY}} --organization ${{secrets.OPEN_API_ID}}
+        python scrap_and_summary.py --api_key ${{secrets.OPEN_API_KEY}} --organization ${{secrets.OPEN_API_ID}}
     - name: Commits
       run: |
         git config --local user.email "ddobokki@naver.com"
