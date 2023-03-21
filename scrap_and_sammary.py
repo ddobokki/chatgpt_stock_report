@@ -6,6 +6,7 @@ from datetime import date
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
 from utils import make_requests
 
 
@@ -71,6 +72,9 @@ def main(args):
             continue
 
     with open(os.path.join(folder_path,'README.md'), 'w') as file:
+        file.write('\n'.join(summary))
+
+    with open('README.md', 'w') as file:
         file.write('\n'.join(summary))
 
 if __name__ == '__main__':
