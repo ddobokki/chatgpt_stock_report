@@ -1,7 +1,7 @@
 import argparse
 import os
 import re
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,9 +28,10 @@ def main(args):
     ###############################################################################
 
     # 각 url에서 그날의 레포트를 크롤링함
-    today = date.today()
-    today = today.isoformat().replace('-','.')
-    #today = '2023.03.20'
+    datetime_utc = datetime.utcnow()
+    timezone_kst = timezone(timedelta(hours=9))
+    datetime_kst = datetime_utc.astimezone(timezone_kst)
+    today = datetime_kst.today().date().strftime('%Y.%m.%d')
     folder_path = today.replace('.','/')
 
     os.makedirs(folder_path,exist_ok=True)
