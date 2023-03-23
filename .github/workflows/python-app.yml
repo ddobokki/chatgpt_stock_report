@@ -2,7 +2,7 @@ name: Scraper & Summary
 
 on:
   schedule:
-    - cron: "00 2,23 * * *"
+    - cron: "00 2,23 * * 1-5"
 jobs:
   build:
 
