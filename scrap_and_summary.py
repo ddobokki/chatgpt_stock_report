@@ -29,8 +29,7 @@ def main(args):
 
     # 각 url에서 그날의 레포트를 크롤링함
     datetime_utc = datetime.utcnow()
-    timezone_kst = timezone(timedelta(hours=9))
-    datetime_kst = datetime_utc.astimezone(timezone_kst)
+    datetime_kst = datetime_utc + timedelta(hours=9)
     today = datetime_kst.today().date().strftime('%Y.%m.%d')
     folder_path = today.replace('.','/')
 
