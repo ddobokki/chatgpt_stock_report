@@ -66,7 +66,7 @@ def main(args):
     for report in tqdm(reports):
         prompt = base_prompt + report
         try:
-            chat_gpt_response = make_requests(engine = "gpt-3.5-turbo-0301",prompts=prompt,api_key=args.api_key, organization=args.organization)
+            chat_gpt_response = make_requests(engine = "gpt-3.5-turbo",prompts=prompt,api_key=args.api_key, organization=args.organization)
             summary.append(chat_gpt_response["choices"][0]["message"]["content"])
         except:
             continue
