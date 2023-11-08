@@ -1,24 +1,21 @@
 import time
-
 import openai
+from openai import OpenAI
 
 
 def make_requests(engine, prompts,api_key=None, organization=None):
-    if api_key is not None:
-        openai.api_key = api_key
-    if organization is not None:
-        openai.organization = organization
+    client = OpenAI(api_key= api_key)
     retries = 3
     retry_cnt = 0
     backoff_time = 10
     while retry_cnt <= retries:
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model=engine,
                 messages = [{"role": "system","content":prompts}]
             )
             break
-        except openai.error.OpenAIError as e:
+        except:
             print(f"Retrying in {backoff_time} seconds...")
             time.sleep(backoff_time)
             backoff_time *= 1.5
