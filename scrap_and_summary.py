@@ -67,7 +67,7 @@ def main(args):
         prompt = base_prompt + report
         try:
             chat_gpt_response = make_requests(engine = "gpt-3.5-turbo",prompts=prompt,api_key=args.api_key, organization=args.organization)
-            summary.append(chat_gpt_response["choices"][0]["message"]["content"])
+            summary.append(chat_gpt_response.choices[0].message.content)
         except:
             continue
 
