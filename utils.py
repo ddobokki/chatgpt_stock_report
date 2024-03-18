@@ -12,7 +12,7 @@ def make_requests(engine, prompts,api_key=None, organization=None):
         try:
             response = client.chat.completions.create(
                 model=engine,
-                messages = [{"role": "system","content":prompts}]
+                messages = [{"role": "user","content":prompts}]
             )
             break
         except:
