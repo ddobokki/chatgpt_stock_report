@@ -3,3 +3,4 @@ __pycache__/
 test.py
 test_*.py
 *.backup
+.claude/
