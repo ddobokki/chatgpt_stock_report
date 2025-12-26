@@ -48,8 +48,11 @@ def extract_text_from_pdf(pdf_url):
     """
     temp_pdf_path = None
     try:
-        # Download PDF to temp file
-        response = requests.get(pdf_url, timeout=30)
+        # Download PDF to temp file with proper headers
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        response = requests.get(pdf_url, headers=headers, timeout=30)
         response.raise_for_status()
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
@@ -159,7 +162,11 @@ def main(args):
     list_url = base_url + "company_list.naver"
 
     ## 1page에 있는 url들을 크롤링함
-    response = requests.get(list_url)
+    # Add User-Agent to avoid bot detection
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    response = requests.get(list_url, headers=headers)
     html = response.text
     soup = BeautifulSoup(html, "html.parser")
     report_raw_tags = soup.select("#contentarea_left > div > table > tr > td > a")
@@ -168,6 +175,8 @@ def main(args):
     for report_raw_tag in report_raw_tags:
         if report_raw_tag.attrs["href"].startswith("company"):
             report_urls.append(base_url + report_raw_tag.attrs["href"])
+
+    print(f"Found {len(report_urls)} report URLs to process")
     ###############################################################################
 
     # 각 url에서 그날의 레포트를 크롤링함
@@ -181,7 +190,7 @@ def main(args):
     reports = []
     for report_url in report_urls:
         try:
-            report_response = requests.get(report_url, timeout=30)
+            report_response = requests.get(report_url, headers=headers, timeout=30)
             report_response.raise_for_status()
             report_html = report_response.text
             report_soup = BeautifulSoup(report_html, "html.parser")
@@ -206,16 +215,21 @@ def main(args):
 
             report_day = date_match.group()
             if not report_day == today:
-                break
+                continue  # Skip non-today reports, don't break the loop
 
             reports.append(report)
+            print(f"✓ Collected report: {report_url[:80]}... (Date: {report_day})")
 
         except requests.RequestException as e:
-            print(f"Failed to fetch {report_url}: {e}")
+            print(f"✗ Failed to fetch {report_url}: {e}")
             continue
         except Exception as e:
-            print(f"Error processing {report_url}: {e}")
+            print(f"✗ Error processing {report_url}: {e}")
             continue
+
+    print(f"\n{'='*80}")
+    print(f"Total reports collected for {today}: {len(reports)}")
+    print(f"{'='*80}\n")
 
     ############################################################################
     # Load prompt from file
