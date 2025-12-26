@@ -18,18 +18,23 @@ def detect_pdf_link(soup, base_url):
     Detect PDF download link from BeautifulSoup object
     Returns: PDF URL or None
     """
-    # Try CSS selector for .pdf extension first
+    # Method 1: Look for stock.pstatic.net PDF links (most reliable for Naver Finance)
+    for link in soup.find_all("a", href=True):
+        href = link.get("href", "")
+        if "stock.pstatic.net" in href and ".pdf" in href.lower():
+            return href  # Already absolute URL
+
+    # Method 2: Try CSS selector for .pdf extension
     pdf_links = soup.select("a[href$='.pdf']")
     if pdf_links:
         href = pdf_links[0].get("href")
         return construct_full_url(base_url, href)
 
-    # Try searching for PDF indicators in link text
-    for link in soup.find_all("a"):
-        link_text = link.text.upper()
-        href = link.get("href", "").lower()
-        if "PDF" in link_text or ".pdf" in href:
-            return construct_full_url(base_url, link.get("href"))
+    # Method 3: Search for any .pdf in href attribute
+    for link in soup.find_all("a", href=True):
+        href = link.get("href", "")
+        if ".pdf" in href.lower():
+            return construct_full_url(base_url, href)
 
     return None
 
@@ -88,6 +93,30 @@ def extract_text_from_html(soup):
         tag_text = tag.text.replace("\t", "").lstrip().rstrip()
         report += tag_text + "\n"
     return report
+
+
+def extract_date_from_text(text):
+    """
+    Extract date from text in various formats and normalize to YYYY.MM.DD
+    Supports:
+    - 2025.12.26 (dot format)
+    - 2025년 12월 26일 (Korean format)
+    Returns: normalized date string (YYYY.MM.DD) or None
+    """
+    # Try dot format first (2025.12.26)
+    match = re.search(r"(\d{4})\.(\d{2})\.(\d{2})", text)
+    if match:
+        return f"{match.group(1)}.{match.group(2)}.{match.group(3)}"
+
+    # Try Korean format (2025년 12월 26일)
+    match = re.search(r"(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일", text)
+    if match:
+        year = match.group(1)
+        month = match.group(2).zfill(2)
+        day = match.group(3).zfill(2)
+        return f"{year}.{month}.{day}"
+
+    return None
 
 
 def extract_company_name(summary_text):
@@ -195,27 +224,29 @@ def main(args):
             report_html = report_response.text
             report_soup = BeautifulSoup(report_html, "html.parser")
 
-            # Try to detect and extract from PDF first
+            # Extract HTML text for date checking (use published date, not PDF creation date)
+            html_text = extract_text_from_html(report_soup)
+
+            # Date validation using HTML (published date) - supports both "2025.12.26" and "2025년 12월 26일"
+            report_day = extract_date_from_text(html_text)
+
+            if not report_day:
+                print(f"✗ No date found: {report_url[:80]}...")
+                continue  # Skip if no date found
+
+            if report_day != today:
+                continue  # Skip non-today reports, don't break the loop
+
+            # If date matches, try to get full content from PDF (more complete)
             pdf_url = detect_pdf_link(report_soup, report_url)
+            report = None
 
             if pdf_url:
                 report = extract_text_from_pdf(pdf_url)
 
-                # If PDF extraction failed, fall back to HTML
-                if not report:
-                    report = extract_text_from_html(report_soup)
-            else:
-                # No PDF found, use HTML extraction
-                report = extract_text_from_html(report_soup)
-
-            # Date validation
-            date_match = re.search(r"\d{4}\.\d{2}\.\d{2}", report)
-            if not date_match:
-                continue  # Skip if no date found
-
-            report_day = date_match.group()
-            if not report_day == today:
-                continue  # Skip non-today reports, don't break the loop
+            # If PDF extraction failed or no PDF, use HTML
+            if not report:
+                report = html_text
 
             reports.append(report)
             print(f"✓ Collected report: {report_url[:80]}... (Date: {report_day})")
